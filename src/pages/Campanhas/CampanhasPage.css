@@ -1,0 +1,32 @@
+.camp-table td { vertical-align: middle; }
+
+.cell-input {
+  width: 100%;
+  min-width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.cell-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+.editing-row { background: #eff6ff; }
+.new-row { background: #f0fdf4; }
+
+.desc-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-tipo-desconto  { background: #dbeafe; color: #1d4ed8; }
+.badge-tipo-cashback  { background: #d1fae5; color: #065f46; }
+.badge-tipo-pontos    { background: #fef3c7; color: #92400e; }
+.badge-yellow         { background: #fef9c3; color: #854d0e; }

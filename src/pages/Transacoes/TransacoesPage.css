@@ -1,0 +1,31 @@
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.filter-select:focus {
+  border-color: #3b82f6;
+}
+
+.date-cell { font-size: 13px; color: #475569; white-space: nowrap; }
+.valor-cell { font-weight: 600; color: #0f172a; white-space: nowrap; }
+
+.total-label { font-size: 14px; color: #64748b; }
+
+.tipo-compra  { background: #dbeafe; color: #1e40af; }
+.tipo-resgate { background: #fce7f3; color: #9d174d; }
+.tipo-bonus   { background: #fef3c7; color: #92400e; }
