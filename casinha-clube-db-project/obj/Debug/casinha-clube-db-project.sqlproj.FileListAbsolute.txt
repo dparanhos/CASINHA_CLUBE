@@ -1,0 +1,5 @@
+/Users/danparanhos/Documents/APP/CASINHA_CLUBE/casinha-clube-db-project/bin/Debug/casinha-clube-db-project.dacpac
+/Users/danparanhos/Documents/APP/CASINHA_CLUBE/casinha-clube-db-project/obj/Debug/Model.xml
+/Users/danparanhos/Documents/APP/CASINHA_CLUBE/casinha-clube-db-project/obj/Debug/refactor.xml
+/Users/danparanhos/Documents/APP/CASINHA_CLUBE/casinha-clube-db-project/obj/Debug/postdeploy.sql
+/Users/danparanhos/Documents/APP/CASINHA_CLUBE/casinha-clube-db-project/obj/Debug/predeploy.sql

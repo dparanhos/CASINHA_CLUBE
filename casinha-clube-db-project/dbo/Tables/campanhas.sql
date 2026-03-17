@@ -1,7 +1,8 @@
 CREATE TABLE [dbo].[campanhas] (
-    [Id]     INT          IDENTITY (1, 1) NOT NULL,
-    [pontos] INT          NOT NULL,
-    [nome]   VARCHAR (50) NOT NULL,
+    [Id]        INT            IDENTITY (1, 1) NOT NULL,
+    [pontos]    INT            NOT NULL,
+    [nome]      VARCHAR (50)   NOT NULL,
+    [descricao] NVARCHAR (MAX) NULL,
     CONSTRAINT [PK_campanhas] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 
