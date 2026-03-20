@@ -88,12 +88,14 @@ export default function ClientesPage() {
               <th>WhatsApp</th>
               <th>CPF</th>
               <th>Cadastro</th>
+              <th>Pontos Acumulados</th>
+              <th>Pontos Resgatáveis</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="empty">Nenhum cliente encontrado.</td></tr>
+              <tr><td colSpan={8} className="empty">Nenhum cliente encontrado.</td></tr>
             )}
             {filtered.map(c => (
               <tr key={c.id}>
@@ -102,6 +104,8 @@ export default function ClientesPage() {
                 <td>{c.whatsapp || '—'}</td>
                 <td>{c.cpf}</td>
                 <td>{formatDate(c.data_entrada)}</td>
+                <td><span className="badge badge-blue">{c.pontos_periodo ?? 0}</span></td>
+                <td><span className="badge badge-green">{c['pontos_resgataveis'] ?? 0}</span></td>
                 <td className="actions">
                   <button className="btn btn-sm btn-outline" onClick={() => openEdit(c)}>Editar</button>
                   <button

@@ -7,9 +7,61 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const pool = await getPool();
-    const result = await pool.request().query(
-      'SELECT id, nome_completo, cpf, email, whatsapp, cep, data_entrada FROM dbo.clientes ORDER BY nome_completo'
-    );
+    const result = await pool.request().query(`
+      WITH periodo AS (
+        SELECT
+          id,
+          nome_completo,
+          cpf,
+          email,
+          whatsapp,
+          cep,
+          data_entrada,
+          DATEADD(year,
+            DATEDIFF(year, data_entrada, GETDATE()) -
+            CASE
+              WHEN DATEADD(year, DATEDIFF(year, data_entrada, GETDATE()), data_entrada) > CAST(GETDATE() AS DATE)
+              THEN 1
+              ELSE 0
+            END,
+            data_entrada
+          ) AS periodo_inicio
+        FROM dbo.clientes
+      )
+      SELECT
+        p.id,
+        p.nome_completo,
+        p.cpf,
+        p.email,
+        p.whatsapp,
+        p.cep,
+        p.data_entrada,
+        ISNULL(SUM(CASE
+          WHEN t.data_hora >= p.periodo_inicio
+           AND t.data_hora < DATEADD(year, 1, p.periodo_inicio)
+           AND t.tipo IN ('Compra', 'Bônus')
+          THEN t.pontos
+          ELSE NULL
+        END), 0) AS pontos_periodo,
+        ISNULL(SUM(CASE
+          WHEN t.data_hora >= p.periodo_inicio
+           AND t.data_hora < DATEADD(year, 1, p.periodo_inicio)
+           AND t.tipo IN ('Compra', 'Bônus')
+          THEN t.pontos
+          ELSE NULL
+        END), 0) -
+        ISNULL(SUM(CASE
+          WHEN t.data_hora >= p.periodo_inicio
+           AND t.data_hora < DATEADD(year, 1, p.periodo_inicio)
+           AND t.tipo = 'Resgate'
+          THEN t.pontos
+          ELSE NULL
+        END), 0) AS pontos_resgataveis
+      FROM periodo p
+      LEFT JOIN dbo.transacoes t ON p.id = t.id_cliente
+      GROUP BY p.id, p.nome_completo, p.cpf, p.email, p.whatsapp, p.cep, p.data_entrada, p.periodo_inicio
+      ORDER BY p.nome_completo
+    `);
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
