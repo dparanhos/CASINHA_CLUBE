@@ -87,10 +87,10 @@ export default function HomePage() {
   const handleCompraSubmit = async e => {
     e.preventDefault();
     setSavingCompra(true);
-    const total_compra = parseFloat(compraForm.total_compra);
+    const total_compra = parseFloat(String(compraForm.total_compra).replace(',', '.'));
     const campanha = campanhas.find(c => c.Id === Number(compraForm.campanha_id));
     const pontos_campanha = campanha?.pontos ?? 0;
-    const pontos = Math.trunc(total_compra * pontos_campanha);
+    const pontos = Math.trunc(total_compra)*pontos_campanha;
     await createTransacao({
       id_cliente:  compraForm.id_cliente,
       tipo:        'Compra',
