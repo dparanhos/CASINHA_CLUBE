@@ -309,9 +309,9 @@ export default function HomePage() {
 
       {/* Stats */}
       <div className="stats-grid">
-        <StatCard label="Clientes Ativos" value={stats?.totalClientes ?? '…'} color="#3b82f6" />
-        <StatCard label="Pontos em Compras (30 dias)" value={stats?.pontosCompra30Dias ?? '…'} color="#10b981" />
-        <StatCard label="Pontos Resgatados" value={stats?.pontosResgate ?? '…'} color="#f59e0b" />
+        <StatCard label="Clientes Ativos" value={stats?.totalClientes ?? '…'} color="#5C1B09" />
+        <StatCard label="Pontos em Compras (30 dias)" value={stats?.pontosCompra30Dias ?? '…'} color="#BBA069" />
+        <StatCard label="Pontos Resgatados" value={stats?.pontosResgate ?? '…'} color="#5C1B09" />
       </div>
 
       {/* Top 10 table */}

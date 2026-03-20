@@ -8,24 +8,25 @@
 
 .filter-select {
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #BBA069;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
-  background: #fff;
+  background: #FFFFFF;
   cursor: pointer;
   transition: border-color 0.15s;
+  color: #000000;
 }
 
 .filter-select:focus {
-  border-color: #3b82f6;
+  border-color: #5C1B09;
 }
 
-.date-cell { font-size: 13px; color: #475569; white-space: nowrap; }
-.valor-cell { font-weight: 600; color: #0f172a; white-space: nowrap; }
+.date-cell { font-size: 13px; color: #000000; white-space: nowrap; }
+.valor-cell { font-weight: 600; color: #5C1B09; white-space: nowrap; }
 
-.total-label { font-size: 14px; color: #64748b; }
+.total-label { font-size: 14px; color: #BBA069; }
 
-.tipo-compra  { background: #dbeafe; color: #1e40af; }
-.tipo-resgate { background: #fce7f3; color: #9d174d; }
-.tipo-bonus   { background: #fef3c7; color: #92400e; }
+.tipo-compra  { background: rgba(187,160,105,0.2); color: #5C1B09; }
+.tipo-resgate { background: rgba(92,27,9,0.12); color: #5C1B09; }
+.tipo-bonus   { background: #f5ede2; color: #5C1B09; }
