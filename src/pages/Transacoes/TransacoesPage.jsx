@@ -1,39 +1,33 @@
 import { useEffect, useState } from 'react';
-import { getTransacoes, getClientes, getCampanhas, deleteTransacao } from '../../services/api';
+import { getTransacoes, getClientes, deleteTransacao } from '../../services/api';
 import './TransacoesPage.css';
 
-const STATUS_ALL = 'Todos';
 const TIPO_ALL = 'Todos';
 
 export default function TransacoesPage() {
   const [transacoes, setTransacoes] = useState([]);
   const [clientes, setClientes] = useState([]);
-  const [campanhas, setCampanhas] = useState([]);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState(STATUS_ALL);
   const [filterTipo, setFilterTipo] = useState(TIPO_ALL);
   const [deleting, setDeleting] = useState(null);
 
   const load = () => {
     getTransacoes().then(setTransacoes);
     getClientes().then(setClientes);
-    getCampanhas().then(setCampanhas);
   };
 
   useEffect(() => { load(); }, []);
 
-  const clienteNome = id => clientes.find(c => c.id === id)?.nome || '—';
-  const campanhaNome = id => id ? campanhas.find(c => c.id === id)?.nome || '—' : '—';
+  const clienteNome = id => clientes.find(c => c.id === id)?.nome_completo || '—';
 
   const filtered = transacoes.filter(t => {
-    const nome = clienteNome(t.cliente_id).toLowerCase();
-    const matchSearch = nome.includes(search.toLowerCase()) || t.descricao?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === STATUS_ALL || t.status === filterStatus;
+    const nome = clienteNome(t.id_cliente).toLowerCase();
+    const matchSearch = nome.includes(search.toLowerCase()) || t.detalhes?.toLowerCase().includes(search.toLowerCase());
     const matchTipo = filterTipo === TIPO_ALL || t.tipo === filterTipo;
-    return matchSearch && matchStatus && matchTipo;
+    return matchSearch && matchTipo;
   });
 
-  const total = filtered.reduce((sum, t) => sum + (t.valor || 0), 0);
+  const total = filtered.reduce((sum, t) => sum + (Number(t.total_compra) || 0), 0);
 
   const handleDelete = async id => {
     if (!window.confirm('Remover esta transação?')) return;
@@ -62,7 +56,7 @@ export default function TransacoesPage() {
           <input
             className="search-bar"
             style={{ flex: 1, marginBottom: 0 }}
-            placeholder="Buscar por cliente ou descrição…"
+            placeholder="Buscar por cliente ou detalhes…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -72,12 +66,6 @@ export default function TransacoesPage() {
             <option>Resgate</option>
             <option>Bônus</option>
           </select>
-          <select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value={STATUS_ALL}>Todos os status</option>
-            <option>Concluída</option>
-            <option>Pendente</option>
-            <option>Cancelada</option>
-          </select>
         </div>
 
         <table className="table">
@@ -85,27 +73,25 @@ export default function TransacoesPage() {
             <tr>
               <th>Data</th>
               <th>Cliente</th>
-              <th>Campanha</th>
               <th>Tipo</th>
-              <th>Valor</th>
-              <th>Descrição</th>
-              <th>Status</th>
+              <th>Pontos</th>
+              <th>Total Compra</th>
+              <th>Detalhes</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={8} className="empty">Nenhuma transação encontrada.</td></tr>
+              <tr><td colSpan={7} className="empty">Nenhuma transação encontrada.</td></tr>
             )}
             {filtered.map(t => (
               <tr key={t.id}>
-                <td className="date-cell">{formatDate(t.data_transacao)}</td>
-                <td><strong>{clienteNome(t.cliente_id)}</strong></td>
-                <td>{campanhaNome(t.campanha_id)}</td>
+                <td className="date-cell">{formatDate(t.data_hora)}</td>
+                <td><strong>{clienteNome(t.id_cliente)}</strong></td>
                 <td><span className={`badge tipo-${t.tipo.toLowerCase().replace('ô', 'o')}`}>{t.tipo}</span></td>
-                <td className="valor-cell">R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                <td>{t.descricao || '—'}</td>
-                <td><span className={`badge ${statusBadge(t.status)}`}>{t.status}</span></td>
+                <td>{t.pontos}</td>
+                <td className="valor-cell">R$ {Number(t.total_compra).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td>{t.detalhes || '—'}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-danger"
@@ -123,9 +109,4 @@ export default function TransacoesPage() {
       </div>
     </div>
   );
-}
-
-function statusBadge(status) {
-  const map = { 'Concluída': 'badge-green', 'Pendente': 'badge-yellow', 'Cancelada': 'badge-red' };
-  return map[status] || 'badge-gray';
 }

@@ -1,119 +1,93 @@
-// API Service Layer - mock implementation using in-memory store.
-// Replace each function body with real fetch() calls once the backend is ready.
+// When VITE_USE_MOCK=true (set in .env.local), all calls use the in-memory mock.
+// Otherwise, calls go to the real backend at /api/*.
 
-import { clientesMock, campanhasMock, transacoesMock } from './mockData';
+import * as mock from './mockApi';
 
-let clientes = [...clientesMock];
-let campanhas = [...campanhasMock];
-let transacoes = [...transacoesMock];
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
-const delay = (ms = 200) => new Promise(r => setTimeout(r, ms));
+const BASE = '/api';
+
+async function request(path, options = {}) {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  return res.json();
+}
 
 // ─── Clientes ────────────────────────────────────────────────────────────────
 
-export async function getClientes() {
-  await delay();
-  return [...clientes];
+export function getClientes() {
+  if (USE_MOCK) return mock.getClientes();
+  return request('/clientes');
 }
 
-export async function createCliente(data) {
-  await delay();
-  const novo = { ...data, id: Date.now(), data_cadastro: new Date().toISOString().split('T')[0], ativo: true };
-  clientes = [...clientes, novo];
-  return novo;
+export function createCliente(data) {
+  if (USE_MOCK) return mock.createCliente(data);
+  return request('/clientes', { method: 'POST', body: JSON.stringify(data) });
 }
 
-export async function updateCliente(id, data) {
-  await delay();
-  clientes = clientes.map(c => c.id === id ? { ...c, ...data } : c);
-  return clientes.find(c => c.id === id);
+export function updateCliente(id, data) {
+  if (USE_MOCK) return mock.updateCliente(id, data);
+  return request(`/clientes/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 }
 
-export async function deleteCliente(id) {
-  await delay();
-  clientes = clientes.filter(c => c.id !== id);
-  return { success: true };
+export function deleteCliente(id) {
+  if (USE_MOCK) return mock.deleteCliente(id);
+  return request(`/clientes/${id}`, { method: 'DELETE' });
 }
 
 // ─── Campanhas ───────────────────────────────────────────────────────────────
 
-export async function getCampanhas() {
-  await delay();
-  return [...campanhas];
+export function getCampanhas() {
+  if (USE_MOCK) return mock.getCampanhas();
+  return request('/campanhas');
 }
 
-export async function createCampanha(data) {
-  await delay();
-  const nova = { ...data, id: Date.now() };
-  campanhas = [...campanhas, nova];
-  return nova;
+export function createCampanha(data) {
+  if (USE_MOCK) return mock.createCampanha(data);
+  return request('/campanhas', { method: 'POST', body: JSON.stringify(data) });
 }
 
-export async function updateCampanha(id, data) {
-  await delay();
-  campanhas = campanhas.map(c => c.id === id ? { ...c, ...data } : c);
-  return campanhas.find(c => c.id === id);
+export function updateCampanha(id, data) {
+  if (USE_MOCK) return mock.updateCampanha(id, data);
+  return request(`/campanhas/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 }
 
-export async function deleteCampanha(id) {
-  await delay();
-  campanhas = campanhas.filter(c => c.id !== id);
-  return { success: true };
+export function deleteCampanha(id) {
+  if (USE_MOCK) return mock.deleteCampanha(id);
+  return request(`/campanhas/${id}`, { method: 'DELETE' });
 }
 
 // ─── Transações ──────────────────────────────────────────────────────────────
 
-export async function getTransacoes() {
-  await delay();
-  return [...transacoes].sort((a, b) => new Date(b.data_transacao) - new Date(a.data_transacao));
+export function getTransacoes() {
+  if (USE_MOCK) return mock.getTransacoes();
+  return request('/transacoes');
 }
 
-export async function createTransacao(data) {
-  await delay();
-  const nova = { ...data, id: Date.now(), data_transacao: new Date().toISOString() };
-  transacoes = [nova, ...transacoes];
-  return nova;
+export function createTransacao(data) {
+  if (USE_MOCK) return mock.createTransacao(data);
+  return request('/transacoes', { method: 'POST', body: JSON.stringify(data) });
 }
 
-export async function updateTransacao(id, data) {
-  await delay();
-  transacoes = transacoes.map(t => t.id === id ? { ...t, ...data } : t);
-  return transacoes.find(t => t.id === id);
+export function updateTransacao(id, data) {
+  if (USE_MOCK) return mock.updateTransacao(id, data);
+  return request(`/transacoes/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 }
 
-export async function deleteTransacao(id) {
-  await delay();
-  transacoes = transacoes.filter(t => t.id !== id);
-  return { success: true };
+export function deleteTransacao(id) {
+  if (USE_MOCK) return mock.deleteTransacao(id);
+  return request(`/transacoes/${id}`, { method: 'DELETE' });
 }
 
-// ─── Dashboard stats ─────────────────────────────────────────────────────────
+// ─── Dashboard ───────────────────────────────────────────────────────────────
 
-export async function getDashboardStats() {
-  await delay();
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
-
-  const transacoesRecentes = transacoes.filter(
-    t => new Date(t.data_transacao) >= thirtyDaysAgo
-  );
-
-  const countByCliente = {};
-  transacoes.forEach(t => {
-    countByCliente[t.cliente_id] = (countByCliente[t.cliente_id] || 0) + 1;
-  });
-
-  const top10 = Object.entries(countByCliente)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([clienteId, total]) => {
-      const cliente = clientes.find(c => c.id === Number(clienteId));
-      return { cliente: cliente?.nome || 'Desconhecido', total };
-    });
-
-  return {
-    totalClientes: clientes.filter(c => c.ativo).length,
-    transacoesUltimos30Dias: transacoesRecentes.length,
-    valorUltimos30Dias: transacoesRecentes.reduce((sum, t) => sum + t.valor, 0),
-    top10Clientes: top10,
-  };
+export function getDashboardStats() {
+  if (USE_MOCK) return mock.getDashboardStats();
+  return request('/dashboard');
 }

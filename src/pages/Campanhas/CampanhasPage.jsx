@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getCampanhas, createCampanha, updateCampanha, deleteCampanha } from '../../services/api';
 import './CampanhasPage.css';
 
-const emptyRow = { nome: '', descricao: '', data_inicio: '', data_fim: '', tipo: 'Desconto', valor_beneficio: '', status: 'Ativa' };
+const emptyRow = { nome: '', pontos: '', descricao: '' };
 
 export default function CampanhasPage() {
   const [campanhas, setCampanhas] = useState([]);
@@ -16,12 +16,12 @@ export default function CampanhasPage() {
   const load = () => getCampanhas().then(setCampanhas);
   useEffect(() => { load(); }, []);
 
-  const startEdit = c => { setEditingId(c.id); setEditForm({ ...c }); };
+  const startEdit = c => { setEditingId(c.Id); setEditForm({ nome: c.nome, pontos: c.pontos, descricao: c.descricao || '' }); };
   const cancelEdit = () => { setEditingId(null); setEditForm({}); };
 
   const saveEdit = async () => {
     setSaving(true);
-    await updateCampanha(editingId, editForm);
+    await updateCampanha(editingId, { nome: editForm.nome, pontos: Number(editForm.pontos), descricao: editForm.descricao || null });
     await load();
     setEditingId(null);
     setSaving(false);
@@ -36,33 +36,32 @@ export default function CampanhasPage() {
   };
 
   const saveNew = async () => {
-    if (!newRow.nome) return;
+    if (!newRow.nome || newRow.pontos === '') return;
     setSaving(true);
-    await createCampanha({ ...newRow, valor_beneficio: parseFloat(newRow.valor_beneficio) || 0 });
+    await createCampanha({ nome: newRow.nome, pontos: Number(newRow.pontos), descricao: newRow.descricao || null });
     await load();
     setNewRow(emptyRow);
     setAdding(false);
     setSaving(false);
   };
 
-  const field = (key, form, setForm, type = 'text', opts) => {
-    if (type === 'select') {
-      return (
-        <select value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} className="cell-input">
-          {opts.map(o => <option key={o}>{o}</option>)}
-        </select>
-      );
-    }
-    return (
-      <input
-        type={type}
-        value={form[key] ?? ''}
-        onChange={e => setForm({ ...form, [key]: e.target.value })}
-        className="cell-input"
-        step={type === 'number' ? '0.01' : undefined}
-      />
-    );
-  };
+  const textField = (key, form, setForm) => (
+    <input
+      value={form[key] ?? ''}
+      onChange={e => setForm({ ...form, [key]: e.target.value })}
+      className="cell-input"
+    />
+  );
+
+  const numberField = (key, form, setForm) => (
+    <input
+      type="number"
+      value={form[key] ?? ''}
+      onChange={e => setForm({ ...form, [key]: e.target.value })}
+      className="cell-input"
+      min="0"
+    />
+  );
 
   return (
     <div className="page">
@@ -76,27 +75,19 @@ export default function CampanhasPage() {
           <thead>
             <tr>
               <th>Nome</th>
+              <th>Pontos</th>
               <th>Descrição</th>
-              <th>Início</th>
-              <th>Fim</th>
-              <th>Tipo</th>
-              <th>Benefício</th>
-              <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {campanhas.map(c => (
-              <tr key={c.id} className={editingId === c.id ? 'editing-row' : ''}>
-                {editingId === c.id ? (
+              <tr key={c.Id} className={editingId === c.Id ? 'editing-row' : ''}>
+                {editingId === c.Id ? (
                   <>
-                    <td>{field('nome', editForm, setEditForm)}</td>
-                    <td>{field('descricao', editForm, setEditForm)}</td>
-                    <td>{field('data_inicio', editForm, setEditForm, 'date')}</td>
-                    <td>{field('data_fim', editForm, setEditForm, 'date')}</td>
-                    <td>{field('tipo', editForm, setEditForm, 'select', ['Desconto', 'Cashback', 'Pontos'])}</td>
-                    <td>{field('valor_beneficio', editForm, setEditForm, 'number')}</td>
-                    <td>{field('status', editForm, setEditForm, 'select', ['Ativa', 'Inativa', 'Encerrada', 'Agendada'])}</td>
+                    <td>{textField('nome', editForm, setEditForm)}</td>
+                    <td>{numberField('pontos', editForm, setEditForm)}</td>
+                    <td>{textField('descricao', editForm, setEditForm)}</td>
                     <td className="actions">
                       <button className="btn btn-sm btn-primary" onClick={saveEdit} disabled={saving}>
                         {saving ? '…' : 'Salvar'}
@@ -107,16 +98,12 @@ export default function CampanhasPage() {
                 ) : (
                   <>
                     <td><strong>{c.nome}</strong></td>
-                    <td className="desc-cell">{c.descricao}</td>
-                    <td>{c.data_inicio}</td>
-                    <td>{c.data_fim}</td>
-                    <td><span className={`badge badge-tipo-${c.tipo.toLowerCase()}`}>{c.tipo}</span></td>
-                    <td>{c.valor_beneficio}{c.tipo === 'Pontos' ? 'x' : '%'}</td>
-                    <td><span className={`badge ${statusBadge(c.status)}`}>{c.status}</span></td>
+                    <td>{c.pontos}</td>
+                    <td className="desc-cell">{c.descricao || '—'}</td>
                     <td className="actions">
                       <button className="btn btn-sm btn-outline" onClick={() => startEdit(c)}>Editar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(c.id)} disabled={deleting === c.id}>
-                        {deleting === c.id ? '…' : 'Remover'}
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(c.Id)} disabled={deleting === c.Id}>
+                        {deleting === c.Id ? '…' : 'Remover'}
                       </button>
                     </td>
                   </>
@@ -124,18 +111,13 @@ export default function CampanhasPage() {
               </tr>
             ))}
 
-            {/* New row */}
             {adding && (
               <tr className="editing-row new-row">
-                <td>{field('nome', newRow, setNewRow)}</td>
-                <td>{field('descricao', newRow, setNewRow)}</td>
-                <td>{field('data_inicio', newRow, setNewRow, 'date')}</td>
-                <td>{field('data_fim', newRow, setNewRow, 'date')}</td>
-                <td>{field('tipo', newRow, setNewRow, 'select', ['Desconto', 'Cashback', 'Pontos'])}</td>
-                <td>{field('valor_beneficio', newRow, setNewRow, 'number')}</td>
-                <td>{field('status', newRow, setNewRow, 'select', ['Ativa', 'Inativa', 'Encerrada', 'Agendada'])}</td>
+                <td>{textField('nome', newRow, setNewRow)}</td>
+                <td>{numberField('pontos', newRow, setNewRow)}</td>
+                <td>{textField('descricao', newRow, setNewRow)}</td>
                 <td className="actions">
-                  <button className="btn btn-sm btn-primary" onClick={saveNew} disabled={saving || !newRow.nome}>
+                  <button className="btn btn-sm btn-primary" onClick={saveNew} disabled={saving || !newRow.nome || newRow.pontos === ''}>
                     {saving ? '…' : 'Salvar'}
                   </button>
                   <button className="btn btn-sm btn-outline" onClick={() => { setAdding(false); setNewRow(emptyRow); }}>Cancelar</button>
@@ -148,9 +130,4 @@ export default function CampanhasPage() {
       </div>
     </div>
   );
-}
-
-function statusBadge(status) {
-  const map = { Ativa: 'badge-green', Inativa: 'badge-gray', Encerrada: 'badge-red', Agendada: 'badge-yellow' };
-  return map[status] || 'badge-gray';
 }

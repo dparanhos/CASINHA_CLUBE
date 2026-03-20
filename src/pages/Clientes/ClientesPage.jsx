@@ -3,7 +3,7 @@ import { getClientes, createCliente, updateCliente, deleteCliente } from '../../
 import Modal from '../../components/Modal';
 import './ClientesPage.css';
 
-const emptyForm = { nome: '', email: '', telefone: '', cpf: '', data_nascimento: '', ativo: true };
+const emptyForm = { nome_completo: '', cpf: '', email: '', whatsapp: '', cep: '' };
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState([]);
@@ -17,22 +17,38 @@ export default function ClientesPage() {
   useEffect(() => { load(); }, []);
 
   const filtered = clientes.filter(c =>
-    c.nome.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase()) ||
-    c.cpf.includes(search)
+    c.nome_completo?.toLowerCase().includes(search.toLowerCase()) ||
+    c.email?.toLowerCase().includes(search.toLowerCase()) ||
+    String(c.cpf).includes(search)
   );
 
   const openNew = () => { setForm(emptyForm); setModal('new'); };
-  const openEdit = c => { setForm({ ...c }); setModal(c); };
+  const openEdit = c => {
+    setForm({
+      nome_completo: c.nome_completo || '',
+      cpf: c.cpf || '',
+      email: c.email || '',
+      whatsapp: c.whatsapp || '',
+      cep: c.cep || '',
+    });
+    setModal(c);
+  };
   const closeModal = () => setModal(null);
 
   const handleSubmit = async e => {
     e.preventDefault();
     setSaving(true);
+    const payload = {
+      nome_completo: form.nome_completo,
+      cpf: Number(form.cpf),
+      email: form.email || null,
+      whatsapp: Number(form.whatsapp),
+      cep: form.cep ? Number(form.cep) : null,
+    };
     if (modal === 'new') {
-      await createCliente(form);
+      await createCliente(payload);
     } else {
-      await updateCliente(modal.id, form);
+      await updateCliente(modal.id, payload);
     }
     await load();
     closeModal();
@@ -46,6 +62,8 @@ export default function ClientesPage() {
     await load();
     setDeleting(null);
   };
+
+  const formatDate = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
   return (
     <div className="page">
@@ -67,29 +85,23 @@ export default function ClientesPage() {
             <tr>
               <th>Nome</th>
               <th>E-mail</th>
-              <th>Telefone</th>
+              <th>WhatsApp</th>
               <th>CPF</th>
               <th>Cadastro</th>
-              <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="empty">Nenhum cliente encontrado.</td></tr>
+              <tr><td colSpan={6} className="empty">Nenhum cliente encontrado.</td></tr>
             )}
             {filtered.map(c => (
               <tr key={c.id}>
-                <td><strong>{c.nome}</strong></td>
-                <td>{c.email}</td>
-                <td>{c.telefone}</td>
+                <td><strong>{c.nome_completo}</strong></td>
+                <td>{c.email || '—'}</td>
+                <td>{c.whatsapp || '—'}</td>
                 <td>{c.cpf}</td>
-                <td>{c.data_cadastro}</td>
-                <td>
-                  <span className={`badge ${c.ativo ? 'badge-green' : 'badge-gray'}`}>
-                    {c.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
-                </td>
+                <td>{formatDate(c.data_entrada)}</td>
                 <td className="actions">
                   <button className="btn btn-sm btn-outline" onClick={() => openEdit(c)}>Editar</button>
                   <button
@@ -111,30 +123,24 @@ export default function ClientesPage() {
         <Modal title={modal === 'new' ? 'Novo Cliente' : 'Editar Cliente'} onClose={closeModal}>
           <form onSubmit={handleSubmit} className="form">
             <div className="form-row">
-              <label>Nome *</label>
-              <input required value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
+              <label>Nome Completo *</label>
+              <input required value={form.nome_completo} onChange={e => setForm({ ...form, nome_completo: e.target.value })} />
+            </div>
+            <div className="form-row">
+              <label>CPF *</label>
+              <input required type="number" value={form.cpf} onChange={e => setForm({ ...form, cpf: e.target.value })} placeholder="Somente números" />
+            </div>
+            <div className="form-row">
+              <label>WhatsApp *</label>
+              <input required type="number" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} placeholder="(11) 99999-9999" />
             </div>
             <div className="form-row">
               <label>E-mail</label>
               <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="form-row">
-              <label>Telefone</label>
-              <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} />
-            </div>
-            <div className="form-row">
-              <label>CPF</label>
-              <input value={form.cpf} onChange={e => setForm({ ...form, cpf: e.target.value })} />
-            </div>
-            <div className="form-row">
-              <label>Data de Nascimento</label>
-              <input type="date" value={form.data_nascimento} onChange={e => setForm({ ...form, data_nascimento: e.target.value })} />
-            </div>
-            <div className="form-row form-row-check">
-              <label>
-                <input type="checkbox" checked={form.ativo} onChange={e => setForm({ ...form, ativo: e.target.checked })} />
-                Cliente ativo
-              </label>
+              <label>CEP</label>
+              <input type="number" value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} placeholder="Somente números" />
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-outline" onClick={closeModal}>Cancelar</button>
